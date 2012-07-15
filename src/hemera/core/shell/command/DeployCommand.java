@@ -74,10 +74,8 @@ public class DeployCommand implements ICommand {
 			// Delete temp directory.
 			FileUtils.instance.delete(UEnvironment.instance.getInstalledTempDir());
 			System.out.println("Successfully deployed: " + this.parseAppName(ham));
-			// Run stop command then run start command.
-			System.out.println("Hemera Runtime Environment will restart now...");
-			ECommand.Stop.execute(null);
-			ECommand.Start.execute(null);
+			// Run restart command.
+			ECommand.Restart.execute(null);
 		} catch (final Exception e) {
 			System.err.println("Deploying failed.");
 			throw e;

@@ -4,6 +4,8 @@ import hemera.core.shell.command.BundleCommand;
 import hemera.core.shell.command.DeployCommand;
 import hemera.core.shell.command.HelpCommand;
 import hemera.core.shell.command.InstallCommand;
+import hemera.core.shell.command.ListCommand;
+import hemera.core.shell.command.RestartCommand;
 import hemera.core.shell.command.StartCommand;
 import hemera.core.shell.command.StatusCommand;
 import hemera.core.shell.command.StopCommand;
@@ -48,6 +50,14 @@ public enum ECommand implements ICommand {
 	 */
 	Stop(new StopCommand()),
 	/**
+	 * The restart command.
+	 */
+	Restart(new RestartCommand()),
+	/**
+	 * The list command.
+	 */
+	List(new ListCommand()),
+	/**
 	 * The status command.
 	 */
 	Status(new StatusCommand()),
@@ -78,6 +88,10 @@ public enum ECommand implements ICommand {
 			return ECommand.Start;
 		} else if (value.equals(ECommand.Stop.command.getKey())) {
 			return ECommand.Stop;
+		} else if (value.equals(ECommand.Restart.command.getKey())) {
+			return ECommand.Restart;
+		} else if (value.equals(ECommand.List.command.getKey())) {
+			return ECommand.List;
 		} else if (value.equals(ECommand.Status.command.getKey())) {
 			return ECommand.Status;
 		} else if (value.equals(ECommand.Uninstall.command.getKey())) {

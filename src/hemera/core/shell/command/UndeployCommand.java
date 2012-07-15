@@ -38,9 +38,7 @@ public class UndeployCommand implements ICommand {
 			JSVCScriptGenerator.instance.exportScripts(homeDir, config);
 			System.out.println(appName + " successfully removed.");
 			// Restart the runtime.
-			System.out.println("Hemera Runtime Environment will restart now...");
-			ECommand.Stop.execute(null);
-			ECommand.Start.execute(null);
+			ECommand.Restart.execute(null);
 		}
 	}
 
