@@ -44,7 +44,11 @@ public enum EShell {
 	/**
 	 * The JSVC stop script file name.
 	 */
-	JSVCStopScriptFile("hemera-jsvc-stop");
+	JSVCStopScriptFile("hemera-jsvc-stop"),
+	/**
+	 * The internal resources package path.
+	 */
+	InternalResourcesPath("hemera/core/shell/resources/");
 
 	/**
 	 * The <code>String</code> value.

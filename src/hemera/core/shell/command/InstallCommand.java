@@ -133,7 +133,6 @@ public class InstallCommand implements ICommand {
 		// Retrieve all the entries in the resources directory and all of
 		// its sub-directories.
 		// Explicitly use slash here since entry path is platform independent.
-		final String resourcesPath = "hemera/core/shell/resources/";
 		JarInputStream input = null;
 		try {
 			input = new JarInputStream(new FileInputStream(jarFile));
@@ -144,7 +143,7 @@ public class InstallCommand implements ICommand {
 					final String entryName = entry.getName();
 					// Entry's name must start with the resource path but does not end with a path separator.
 					// Explicitly use slash here since entry path is platform independent.
-					if (entryName.startsWith(resourcesPath) && !entryName.endsWith("/")) {
+					if (entryName.startsWith(EShell.InternalResourcesPath.value) && !entryName.endsWith("/")) {
 						// Write the entry to lib directory.
 						FileUtils.instance.writeToFile(jar, entryName, binDir);
 					}
