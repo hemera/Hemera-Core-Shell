@@ -171,7 +171,7 @@ public class BundleCommand implements ICommand {
 		final int size = modules.size();
 		for (int i = 0; i < size; i++) {
 			final HBMModule module = modules.get(i);
-			final List<File> modulelibs = FileUtils.instance.getFiles(module.libDir);
+			final List<File> modulelibs = FileUtils.instance.getFiles(module.libDir, ".jar");
 			// Exclude duplicates based on name.
 			final int libsize = modulelibs.size();
 			for (int j = 0; j < libsize; j++) {
