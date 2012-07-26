@@ -24,11 +24,11 @@ public enum EShell {
 	/**
 	 * The Mac OSX JSVC executable file name.
 	 */
-	JSVCOSX("jsvc-osx"),
+	JSVCOSX("jsvc-osx-v1.0.5"),
 	/**
 	 * The Linux JSVC executable file name.
 	 */
-	JSVCLinux("jsvc-linux"),
+	JSVCLinux("jsvc-linux-1.0.5"),
 	/**
 	 * The JSVC standard output file.
 	 */
