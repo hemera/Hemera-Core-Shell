@@ -1,11 +1,7 @@
 package hemera.core.shell.command;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.jar.JarInputStream;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -33,7 +29,7 @@ import hemera.core.utility.shell.ShellResult;
  * @version 1.0.0
  */
 public class InstallCommand implements ICommand {
-	
+
 
 	@Override
 	public void execute(final String[] args) throws Exception {
@@ -70,7 +66,7 @@ public class InstallCommand implements ICommand {
 			throw e;
 		}
 	}
-	
+
 	/**
 	 * Create all the necessary directories.
 	 * @param homeDir The specified <code>String</code>
@@ -129,31 +125,9 @@ public class InstallCommand implements ICommand {
 	private void installLibraries(final String binDir) throws IOException {
 		// Retrieve current executing Jar file.
 		final File jarFile = FileUtils.instance.getCurrentJarFile();
-		final JarFile jar = new JarFile(jarFile);
-		// Retrieve all the entries in the resources directory and all of
-		// its sub-directories.
-		// Explicitly use slash here since entry path is platform independent.
-		JarInputStream input = null;
-		try {
-			input = new JarInputStream(new FileInputStream(jarFile));
-			JarEntry entry = input.getNextJarEntry();
-			while (entry != null) {
-				entry = input.getNextJarEntry();
-				if (entry != null) {
-					final String entryName = entry.getName();
-					// Entry's name must start with the resource path but does not end with a path separator.
-					// Explicitly use slash here since entry path is platform independent.
-					if (entryName.startsWith(EShell.InternalResourcesPath.value) && !entryName.endsWith("/")) {
-						// Write the entry to lib directory.
-						FileUtils.instance.writeToFile(jar, entryName, binDir);
-					}
-				}
-			}
-		} finally {
-			if (input != null) input.close();
-		}
+		FileUtils.instance.writePackage(jarFile, binDir, EShell.InternalResourcesPath.value);
 	}
-	
+
 	/**
 	 * Copy the binary files to the bin directory and
 	 * update necessary files with correct path.
@@ -230,7 +204,7 @@ public class InstallCommand implements ICommand {
 		final ShellResult result = Shell.instance.executeAsRoot(command.toString());
 		if (result.code != 0) throw new IOException("Overwriting existing environment file failed.\n" + result.output);
 	}
-	
+
 	@Override
 	public String getKey() {
 		return "install";
