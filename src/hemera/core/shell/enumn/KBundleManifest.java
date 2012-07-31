@@ -20,7 +20,13 @@ public enum KBundleManifest {
 	 * The value is the <code>String</code> file name
 	 * of the library Jar file.
 	 */
-	LibraryJarFile("lib_jar");
+	LibraryJarFile("lib_jar"),
+	/**
+	 * The key for the shared resources Jar file name
+	 * attribute. The value is the <code>String</code>
+	 * file name of the shared resources Jar file.
+	 */
+	SharedResourcesJarFile("shared_resources_jar");
 	
 	/**
 	 * The <code>String</code> key.

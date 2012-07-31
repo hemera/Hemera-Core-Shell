@@ -14,13 +14,13 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import hemera.core.environment.config.Configuration;
 import hemera.core.environment.enumn.EEnvironment;
-import hemera.core.environment.ham.KHAM;
+import hemera.core.environment.ham.HAM;
+import hemera.core.environment.ham.HAMModule;
+import hemera.core.environment.ham.key.KHAM;
 import hemera.core.environment.util.UEnvironment;
 import hemera.core.shell.enumn.ECommand;
 import hemera.core.shell.enumn.EShell;
@@ -54,15 +54,19 @@ public class DeployCommand implements ICommand {
 			}
 			final JarFile bundle = new JarFile(bundlePath);
 			// Read in HAM document.
-			final Document ham = this.readHAM(bundle);
+			final Document hamDoc = this.readHAM(bundle);
+			final HAM ham = new HAM(hamDoc);
 			// Create application directory.
 			final String appDir = this.createAppDir(ham);
 			// Deploy bundle library files.
 			System.out.println("Deploying libraries...");
 			this.deployLibrary(appDir, bundle);
+			// Deploy shared resources.
+			System.out.println("Deploying shared resources...");
+			this.deploySharedResources(appDir, bundle);
 			// Deploy HAM file.
 			System.out.println("Deploying HAM...");
-			this.deployHAM(appDir, ham);
+			this.deployHAM(appDir, ham, hamDoc);
 			// Deploy modules.
 			System.out.println("Deploying modules...");
 			this.deployModules(appDir, bundle, ham);
@@ -73,7 +77,7 @@ public class DeployCommand implements ICommand {
 			JSVCScriptGenerator.instance.exportScripts(homeDir, config);
 			// Delete temp directory.
 			FileUtils.instance.delete(UEnvironment.instance.getInstalledTempDir());
-			System.out.println("Successfully deployed: " + this.parseAppName(ham));
+			System.out.println("Successfully deployed: " + ham.applicationName);
 			// Run restart command.
 			ECommand.Restart.execute(null);
 		} catch (final Exception e) {
@@ -86,7 +90,7 @@ public class DeployCommand implements ICommand {
 	 * Read in the HAM XML document from the given
 	 * application bundle.
 	 * @param bundle The bundle <code>JarFile</code>.
-	 * @return The HAM XML <code>Document</code>.
+	 * @return The HAM <code>Document</code>.
 	 * @throws IOException If parsing bundle file
 	 * failed.
 	 * @throws SAXException If parsing HAM failed.
@@ -108,13 +112,12 @@ public class DeployCommand implements ICommand {
 	/**
 	 * Create the application directory. This will
 	 * first delete the existing directory.
-	 * @param ham The HAM XML <code>Document</code>.
+	 * @param ham The <code>HAM</code> document.
 	 * @return The <code>String</code> application
 	 * directory.
 	 */
-	private String createAppDir(final Document ham) throws IOException {
-		final String appName = this.parseAppName(ham);
-		final String path = UEnvironment.instance.getApplicationDir(appName);
+	private String createAppDir(final HAM ham) throws IOException {
+		final String path = UEnvironment.instance.getApplicationDir(ham.applicationName);
 		// Delete existing first.
 		FileUtils.instance.delete(path);
 		// Create directory.
@@ -153,26 +156,52 @@ public class DeployCommand implements ICommand {
 	}
 
 	/**
+	 * Deploy all the shared resources files contained
+	 * in the given bundle file.
+	 * @param appDir The <code>String</code> path of
+	 * the application directory.
+	 * @param bundle The bundle <code>JarFile</code>.
+	 * @throws IOException If parsing bundle file
+	 * failed.
+	 */
+	private void deploySharedResources(final String appDir, final JarFile bundle) throws IOException {
+		// Retrieve the resources Jar entry.
+		final Manifest manifest = bundle.getManifest();
+		final String resourcesEntryName = manifest.getMainAttributes().getValue(KBundleManifest.SharedResourcesJarFile.key);
+		// Bundle may not contain any shared resources.
+		if (resourcesEntryName == null || resourcesEntryName.isEmpty()) return;
+		// Write the resources Jar file to temp directory.
+		final String tempDir = UEnvironment.instance.getInstalledTempDir();
+		final File resourcesFile = FileUtils.instance.writeToFile(bundle, resourcesEntryName, tempDir);
+		// Write all the contents of the resources Jar file to application's
+		// resources directory, excluding environment already installed.
+		final String appResourcesDir = UEnvironment.instance.getApplicationResourcesDir(appDir);
+		FileUtils.instance.writeAll(resourcesFile, appResourcesDir, null);
+		// Delete temporary resources Jar file.
+		resourcesFile.delete();
+	}
+
+	/**
 	 * Deploy the HAM configuration.
 	 * @param appDir The <code>String</code> path of
 	 * the application directory.
-	 * @param ham The HAM XML <code>Document</code>.
+	 * @param ham The <code>HAM</code> document.
+	 * @param hamDoc The HAM <code>Document</code>.
 	 * @throws IOException If file processing failed.
 	 * @throws TransformerException If writing the
 	 * XML document failed.
 	 */
-	private void deployHAM(final String appDir, final Document ham) throws IOException, TransformerException {
-		final String appName = this.parseAppName(ham);
+	private void deployHAM(final String appDir, final HAM ham, final Document hamDoc) throws IOException, TransformerException {
 		// Write HAM to a temporary location.
 		final String tempDir = UEnvironment.instance.getInstalledTempDir();
-		final String tempTarget = tempDir + appName + EEnvironment.HAMExtension.value;
-		final File tempFile = FileUtils.instance.writeDocument(ham, tempTarget);
+		final String tempTarget = tempDir + ham.applicationName + EEnvironment.HAMExtension.value;
+		final File tempFile = FileUtils.instance.writeDocument(hamDoc, tempTarget);
 		// Replace applications directory.
 		final String contents = FileUtils.instance.readAsString(tempFile);
 		final String updated = contents.replace(KHAM.PlaceholderAppsDir.tag, appDir);
 		// Write to file.
 		final StringBuilder builder = new StringBuilder();
-		builder.append(appDir).append(appName).append(EEnvironment.HAMExtension.value);
+		builder.append(appDir).append(ham.applicationName).append(EEnvironment.HAMExtension.value);
 		FileUtils.instance.writeAsString(updated, builder.toString());
 	}
 
@@ -182,40 +211,23 @@ public class DeployCommand implements ICommand {
 	 * @param appDir The <code>String</code> path of
 	 * the application directory.
 	 * @param bundle The bundle <code>JarFile</code>.
-	 * @param ham The HAM XML <code>Document</code>.
+	 * @param ham The <code>HAM</code> document.
 	 * @throws IOException If parsing bundle file
 	 * failed.
 	 */
-	private void deployModules(final String appDir, final JarFile bundle, final Document ham) throws IOException {
+	private void deployModules(final String appDir, final JarFile bundle, final HAM ham) throws IOException {
 		final String tempDir = UEnvironment.instance.getInstalledTempDir();
-		// Parse modules tag.
-		final NodeList modulesList = ham.getElementsByTagName(KHAM.Modules.tag);
-		if (modulesList == null || modulesList.getLength() != 1) {
-			throw new IllegalArgumentException("Invalid HAM file. Must contain one modules tag.");
-		}
-		final Element modulesTag = (Element)modulesList.item(0);
-		// Parse module tags.
-		final NodeList moduleTags = modulesTag.getElementsByTagName(KHAM.Module.tag);
-		if (moduleTags == null || moduleTags.getLength() <= 0) {
-			throw new IllegalArgumentException("Invalid HAM file. Must contain at least one module tags.");
-		}
-		final int length = moduleTags.getLength();
-		for (int i = 0; i < length; i++) {
-			// Parse out the class name.
-			final Element moduleTag = (Element)moduleTags.item(i);
-			final NodeList classList = moduleTag.getElementsByTagName(KHAM.ModuleClassname.tag);
-			if (classList == null || classList.getLength() != 1) {
-				throw new IllegalArgumentException("Invalid HAM file. Each module tag must contain one class-name tag.");
-			}
-			final String classname = classList.item(0).getTextContent();
+		final int size = ham.modules.size();
+		for (int i = 0; i < size; i++) {
+			final HAMModule module = ham.modules.get(i);
 			// Use class name as the Jar file entry name.
-			final String entryName = classname + ".jar";
+			final String entryName = module.classname + ".jar";
 			final File moduleFile = FileUtils.instance.writeToFile(bundle, entryName, tempDir);
 			// Write all the contents of the module Jar file to the module directory.
-			final String moduleDir = appDir + classname + File.separator;
+			final String moduleDir = appDir + module.classname + File.separator;
 			FileUtils.instance.writeAll(moduleFile, moduleDir);
 			// Retrieve the resources Jar file.
-			final File resourcesFile = new File(moduleDir+classname+"-resources.jar");
+			final File resourcesFile = new File(moduleDir+module.classname+"-resources.jar");
 			if (resourcesFile.exists()) {
 				// Create resources directory.
 				final File resourcesDir = new File(moduleDir+"resources/");
@@ -228,22 +240,6 @@ public class DeployCommand implements ICommand {
 			// Delete the temporary module Jar file.
 			moduleFile.delete();
 		}
-	}
-
-	/**
-	 * Retrieve the application name from the HAM
-	 * document.
-	 * @param ham The HAM XML <code>Document</code>.
-	 * @return The <code>String</code> application
-	 * name.
-	 */
-	private String parseAppName(final Document ham) {
-		// Parse application name.
-		final NodeList list = ham.getElementsByTagName(KHAM.ApplicationName.tag);
-		if (list == null || list.getLength() != 1) {
-			throw new IllegalArgumentException("Invalid HAM file. Must contain one application name.");
-		}
-		return list.item(0).getTextContent();
 	}
 
 	@Override

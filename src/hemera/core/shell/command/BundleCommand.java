@@ -75,7 +75,7 @@ public class BundleCommand implements ICommand {
 				sharedResourceJar = FileUtils.instance.jarFiles(resourceFiles, resourceTarget);
 			}
 			// Create a manifest file for the bundle.
-			final Manifest manifest = this.createManifest(moduleJars, libJar, hamFile);
+			final Manifest manifest = this.createManifest(moduleJars, libJar, sharedResourceJar, hamFile);
 			// Package all module Jar files, application library Jar file, and
 			// the HAM file into a single bundle Jar file.
 			System.out.println("Packaging final bundle...");
@@ -254,11 +254,15 @@ public class BundleCommand implements ICommand {
 	 * @param libjar The <code>File</code> of the
 	 * single Jar file containing all module library
 	 * files to be included in the final bundle file.
+	 * @param sharedResourcesJar The <code>File</code>
+	 * of the shared resources Jar. <code>null</code>
+	 * if there are no shared resources.
 	 * @param hamfile The HAM <code>File</code> to be
 	 * included in the final bundle file.
 	 * @return The <code>Manifest</code> instance.
 	 */
-	private Manifest createManifest(final List<File> modulejars, final File libjar, final File hamfile) {
+	private Manifest createManifest(final List<File> modulejars, final File libjar, final File sharedResourcesJar,
+			final File hamfile) {
 		final Manifest manifest = new Manifest();
 		// Must include the basic attributes.
 		manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
@@ -268,6 +272,10 @@ public class BundleCommand implements ICommand {
 		manifest.getMainAttributes().putValue(KBundleManifest.HAMFile.key, hamfile.getName());
 		// Add library Jar file attribute.
 		manifest.getMainAttributes().putValue(KBundleManifest.LibraryJarFile.key, libjar.getName());
+		// Add shared resources Jar file attribute.
+		if (sharedResourcesJar != null) {
+			manifest.getMainAttributes().putValue(KBundleManifest.SharedResourcesJarFile.key, sharedResourcesJar.getName());
+		}
 		return manifest;
 	}
 
