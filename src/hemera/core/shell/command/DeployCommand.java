@@ -19,7 +19,7 @@ import org.xml.sax.SAXException;
 import hemera.core.environment.config.Configuration;
 import hemera.core.environment.enumn.EEnvironment;
 import hemera.core.environment.ham.HAM;
-import hemera.core.environment.ham.HAMModule;
+import hemera.core.environment.ham.HAMResource;
 import hemera.core.environment.ham.key.KHAM;
 import hemera.core.environment.util.UEnvironment;
 import hemera.core.shell.enumn.ECommand;
@@ -217,9 +217,9 @@ public class DeployCommand implements ICommand {
 	 */
 	private void deployModules(final String appDir, final JarFile bundle, final HAM ham) throws IOException {
 		final String tempDir = UEnvironment.instance.getInstalledTempDir();
-		final int size = ham.modules.size();
+		final int size = ham.resources.size();
 		for (int i = 0; i < size; i++) {
-			final HAMModule module = ham.modules.get(i);
+			final HAMResource module = ham.resources.get(i);
 			// Use class name as the Jar file entry name.
 			final String entryName = module.classname + ".jar";
 			final File moduleFile = FileUtils.instance.writeToFile(bundle, entryName, tempDir);

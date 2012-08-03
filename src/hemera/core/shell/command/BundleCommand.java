@@ -12,7 +12,7 @@ import hemera.core.environment.enumn.EEnvironment;
 import hemera.core.environment.ham.HAM;
 import hemera.core.environment.hbm.HBM;
 import hemera.core.environment.hbm.HBMDependency;
-import hemera.core.environment.hbm.HBMModule;
+import hemera.core.environment.hbm.HBMResource;
 import hemera.core.environment.util.UEnvironment;
 import hemera.core.shell.enumn.EShell;
 import hemera.core.shell.enumn.KBundleManifest;
@@ -131,10 +131,10 @@ public class BundleCommand implements ICommand {
 	 */
 	private List<File> buildModules(final HBM bundle, final List<File> sharedDependencies, final String tempDir) throws Exception {
 		final Compiler compiler = new Compiler();
-		final int size = bundle.modules.size();
+		final int size = bundle.resources.size();
 		final ArrayList<File> moduleJars = new ArrayList<File>(size);
 		for (int i = 0; i < size; i++) {
-			final HBMModule module = bundle.modules.get(i);
+			final HBMResource module = bundle.resources.get(i);
 			final File moduleJar = this.buildModule(bundle, module, sharedDependencies, compiler, tempDir);
 			moduleJars.add(moduleJar);
 		}
@@ -158,7 +158,7 @@ public class BundleCommand implements ICommand {
 	 * @return The packaged module Jar <code>File</code>.
 	 * @throws Exception If any processing failed.
 	 */
-	private File buildModule(final HBM bundle, final HBMModule module, final List<File> sharedDependencies,
+	private File buildModule(final HBM bundle, final HBMResource module, final List<File> sharedDependencies,
 			final Compiler compiler, final String tempDir) throws Exception {
 		// Each module gets a separate build directory.
 		final String buildDir = tempDir + module.classname + File.separator;
@@ -216,9 +216,9 @@ public class BundleCommand implements ICommand {
 		final List<File> libFiles = new ArrayList<File>();
 		libFiles.addAll(sharedDependencies);
 		// Add all the module library files.
-		final int moduleSize = bundle.modules.size();
+		final int moduleSize = bundle.resources.size();
 		for (int i = 0; i < moduleSize; i++) {
-			final HBMModule module = bundle.modules.get(i);
+			final HBMResource module = bundle.resources.get(i);
 			if (module.dependencies == null) continue;
 			final int size = module.dependencies.size();
 			for (int j = 0; j < size; j++) {
