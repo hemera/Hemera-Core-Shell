@@ -60,9 +60,9 @@ public class BundleCommand implements ICommand {
 			final Document ham = new HAM(bundle).toXML();
 			final String hamTarget = tempPath + bundle.applicationName.toLowerCase() + EEnvironment.HAMExtension.value;
 			final File hamFile = FileUtils.instance.writeDocument(ham, hamTarget);
-			// Build modules.
-			System.out.println("Building modules...");
-			final List<File> moduleJars = this.buildModules(bundle, sharedDependencies, tempPath);
+			// Build resources.
+			System.out.println("Building resources...");
+			final List<File> resourceJars = this.buildResources(bundle, sharedDependencies, tempPath);
 			// Package all library files into a single Jar file.
 			System.out.println("Packaging application library files...");
 			final File libJar = this.buildAppLib(bundle, sharedDependencies, tempPath);
@@ -75,13 +75,13 @@ public class BundleCommand implements ICommand {
 				sharedResourceJar = FileUtils.instance.jarFiles(resourceFiles, resourceTarget);
 			}
 			// Create a manifest file for the bundle.
-			final Manifest manifest = this.createManifest(moduleJars, libJar, sharedResourceJar, hamFile);
-			// Package all module Jar files, application library Jar file, and
+			final Manifest manifest = this.createManifest(resourceJars, libJar, sharedResourceJar, hamFile);
+			// Package all resource Jar files, application library Jar file, and
 			// the HAM file into a single bundle Jar file.
 			System.out.println("Packaging final bundle...");
 			final ArrayList<File> files = new ArrayList<File>();
 			final String bundleTarget = FileUtils.instance.getValidDir(bundlePath) + bundle.applicationName + EShell.BundleExtension.value;
-			files.addAll(moduleJars);
+			files.addAll(resourceJars);
 			files.add(libJar);
 			files.add(hamFile);
 			if (sharedResourceJar != null) files.add(sharedResourceJar);
@@ -118,90 +118,90 @@ public class BundleCommand implements ICommand {
 	}
 
 	/**
-	 * Build all the modules contained in the given
+	 * Build all the resources contained in the given
 	 * bundle.
 	 * @param bundle The <code>HBundle</code> node.
 	 * @param sharedDependencies The <code>List</code> of
 	 * all the shared dependency <code>File</code>.
 	 * @param tempDir The <code>String</code> temporary
 	 * directory.
-	 * @return The <code>List</code> of built module
+	 * @return The <code>List</code> of built resource
 	 * Jar <code>File</code>.
-	 * @throws Exception If building modules failed.
+	 * @throws Exception If building resources failed.
 	 */
-	private List<File> buildModules(final HBM bundle, final List<File> sharedDependencies, final String tempDir) throws Exception {
+	private List<File> buildResources(final HBM bundle, final List<File> sharedDependencies, final String tempDir) throws Exception {
 		final Compiler compiler = new Compiler();
 		final int size = bundle.resources.size();
-		final ArrayList<File> moduleJars = new ArrayList<File>(size);
+		final ArrayList<File> resourceJars = new ArrayList<File>(size);
 		for (int i = 0; i < size; i++) {
-			final HBMResource module = bundle.resources.get(i);
-			final File moduleJar = this.buildModule(bundle, module, sharedDependencies, compiler, tempDir);
-			moduleJars.add(moduleJar);
+			final HBMResource resource = bundle.resources.get(i);
+			final File resourceJar = this.buildResource(bundle, resource, sharedDependencies, compiler, tempDir);
+			resourceJars.add(resourceJar);
 		}
-		return moduleJars;
+		return resourceJars;
 	}
 
 	/**
-	 * Build the HBM module node by packaging all the
-	 * compiled module class files and its configuration
+	 * Build the HBM resource node by packaging all the
+	 * compiled resource class files and its configuration
 	 * file if there is one into a single Jar file under
 	 * the bundler temporary directory.
 	 * @param bundle The <code>HBM</code> bundle.
-	 * @param module The <code>HBMModule</code> to be
+	 * @param resource The <code>HBMResource</code> to be
 	 * built.
 	 * @param sharedDependencies The <code>List</code> of
 	 * all the shared dependency <code>File</code>.
 	 * @param compiler The <code>Compiler</code> instance
-	 * to compile the module classes.
+	 * to compile the resource classes.
 	 * @param tempDir The <code>String</code> temporary
 	 * directory.
-	 * @return The packaged module Jar <code>File</code>.
+	 * @return The packaged resource Jar <code>File</code>.
 	 * @throws Exception If any processing failed.
 	 */
-	private File buildModule(final HBM bundle, final HBMResource module, final List<File> sharedDependencies,
+	private File buildResource(final HBM bundle, final HBMResource resource, final List<File> sharedDependencies,
 			final Compiler compiler, final String tempDir) throws Exception {
-		// Each module gets a separate build directory.
-		final String buildDir = tempDir + module.classname + File.separator;
-		// Compile classes with both shared and module dependencies.
+		// Each resource gets a separate build directory.
+		final String buildDir = tempDir + resource.classname + File.separator;
+		// Compile classes with both shared and resource dependencies.
 		final List<File> dependencies = new ArrayList<File>();
 		dependencies.addAll(sharedDependencies);
-		if (module.dependencies != null) {
-			final int size = module.dependencies.size();
+		if (resource.dependencies != null) {
+			final int size = resource.dependencies.size();
 			for (int i = 0; i < size; i++) {
-				final List<File> moduleDependencies = module.dependencies.get(i).process(tempDir);
-				dependencies.addAll(moduleDependencies);
+				final List<File> resourceDependencies = resource.dependencies.get(i).process(tempDir);
+				dependencies.addAll(resourceDependencies);
 			}
 		}
 		final String classDir = buildDir + "classes" + File.separator;
-		compiler.compile(module.srcDir, classDir, dependencies);
+		compiler.compile(resource.srcDir, classDir, dependencies);
 		// Package class files into a Jar file.
-		final String classjarPath = buildDir + module.classname + ".jar";
+		final String classjarPath = buildDir + resource.classname + ".jar";
 		final ArrayList<File> classDirFileList = new ArrayList<File>(1);
 		classDirFileList.add(new File(classDir));
 		final File classjar = FileUtils.instance.jarFiles(classDirFileList, classjarPath);
-		// Process module configuration.
-		final File moduleConfig = module.processConfig(bundle.shared, tempDir);
-		// Package class Jar file, processed configuration file and all resource files into a module Jar file.
-		final String modulejarPath = tempDir + module.classname + ".jar";
-		final ArrayList<File> modulefiles = new ArrayList<File>();
-		modulefiles.add(classjar);
-		if (moduleConfig != null) modulefiles.add(moduleConfig);
-		// Package module resource files into a Jar file.
-		if (module.resourcesDir != null) {
-			final List<File> resourceFiles = FileUtils.instance.getFiles(module.resourcesDir);
-			final String resourceTarget = tempDir + module.classname + "-resources.jar";
+		// Process resource configuration.
+		final File resourceConfig = resource.processConfig(bundle.shared, tempDir);
+		// Package class Jar file, processed configuration file and all resource files into a resource Jar file.
+		final String resourcejarPath = tempDir + resource.classname + ".jar";
+		final ArrayList<File> resourcefiles = new ArrayList<File>();
+		resourcefiles.add(classjar);
+		if (resourceConfig != null) resourcefiles.add(resourceConfig);
+		// Package resource files into a Jar file.
+		if (resource.resourcesDir != null) {
+			final List<File> resourceFiles = FileUtils.instance.getFiles(resource.resourcesDir);
+			final String resourceTarget = tempDir + resource.classname + "-resources.jar";
 			final File resourceJar = FileUtils.instance.jarFiles(resourceFiles, resourceTarget);
-			modulefiles.add(resourceJar);
+			resourcefiles.add(resourceJar);
 		}
-		final File modulejar = FileUtils.instance.jarFiles(modulefiles, modulejarPath);
+		final File resourcejar = FileUtils.instance.jarFiles(resourcefiles, resourcejarPath);
 		// Remove the build directory.
 		FileUtils.instance.delete(buildDir);
-		return modulejar;
+		return resourcejar;
 	}
 
 	/**
 	 * Package all the shared library files and all the
-	 * library files of all the modules into a single
+	 * library files of all the resources into a single
 	 * Jar file under the bundler temporary directory.
 	 * @param bundle The <code>HBM</code> bundle.
 	 * @param sharedDependencies The <code>List</code> of
@@ -215,19 +215,19 @@ public class BundleCommand implements ICommand {
 		// Add all shared library files.
 		final List<File> libFiles = new ArrayList<File>();
 		libFiles.addAll(sharedDependencies);
-		// Add all the module library files.
-		final int moduleSize = bundle.resources.size();
-		for (int i = 0; i < moduleSize; i++) {
-			final HBMResource module = bundle.resources.get(i);
-			if (module.dependencies == null) continue;
-			final int size = module.dependencies.size();
+		// Add all the resource library files.
+		final int resourceSize = bundle.resources.size();
+		for (int i = 0; i < resourceSize; i++) {
+			final HBMResource resource = bundle.resources.get(i);
+			if (resource.dependencies == null) continue;
+			final int size = resource.dependencies.size();
 			for (int j = 0; j < size; j++) {
-				final HBMDependency dependency = module.dependencies.get(j);
+				final HBMDependency dependency = resource.dependencies.get(j);
 				// Exclude duplicates based on name.
-				final List<File> moduleDependencies = dependency.process(tempDir);
-				final int libsize = moduleDependencies.size();
+				final List<File> resourceDependencies = dependency.process(tempDir);
+				final int libsize = resourceDependencies.size();
 				for (int k = 0; k < libsize; k++) {
-					final File file = moduleDependencies.get(k);
+					final File file = resourceDependencies.get(k);
 					boolean contains = false;
 					final int addedSize = libFiles.size();
 					for (int l = 0; l < addedSize; l++) {
@@ -248,11 +248,11 @@ public class BundleCommand implements ICommand {
 
 	/**
 	 * Create the bundle manifest file.
-	 * @param modulejars The <code>List</code> of all
-	 * module Jar <code>File</code> to be included in
+	 * @param resourcejars The <code>List</code> of all
+	 * resource Jar <code>File</code> to be included in
 	 * the final bundle file.
 	 * @param libjar The <code>File</code> of the
-	 * single Jar file containing all module library
+	 * single Jar file containing all resource library
 	 * files to be included in the final bundle file.
 	 * @param sharedResourcesJar The <code>File</code>
 	 * of the shared resources Jar. <code>null</code>
@@ -261,7 +261,7 @@ public class BundleCommand implements ICommand {
 	 * included in the final bundle file.
 	 * @return The <code>Manifest</code> instance.
 	 */
-	private Manifest createManifest(final List<File> modulejars, final File libjar, final File sharedResourcesJar,
+	private Manifest createManifest(final List<File> resourcejars, final File libjar, final File sharedResourcesJar,
 			final File hamfile) {
 		final Manifest manifest = new Manifest();
 		// Must include the basic attributes.

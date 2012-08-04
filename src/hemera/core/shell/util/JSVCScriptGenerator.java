@@ -164,7 +164,7 @@ public enum JSVCScriptGenerator {
 	/**
 	 * Build the class path section of the script by
 	 * scanning the binary directory, the applications
-	 * modules directories and all the applications
+	 * resources directories and all the applications
 	 * library directories.
 	 * @return The <code>String</code> class path
 	 * section.
@@ -175,7 +175,7 @@ public enum JSVCScriptGenerator {
 		final String libDir = UEnvironment.instance.getBinDir(homeDir);
 		final List<File> libList = FileUtils.instance.getFiles(libDir, ".jar");
 		this.appendFiles(builder, libList);
-		// Scan applications modules directories and library directories.
+		// Scan applications resources directories and library directories.
 		final String appsDir = UEnvironment.instance.getAppsDir(homeDir);
 		final List<File> appsList = FileUtils.instance.getFiles(appsDir, ".jar");
 		this.appendFiles(builder, appsList);

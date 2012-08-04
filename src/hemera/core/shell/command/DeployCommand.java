@@ -67,9 +67,9 @@ public class DeployCommand implements ICommand {
 			// Deploy HAM file.
 			System.out.println("Deploying HAM...");
 			this.deployHAM(appDir, ham, hamDoc);
-			// Deploy modules.
-			System.out.println("Deploying modules...");
-			this.deployModules(appDir, bundle, ham);
+			// Deploy resources.
+			System.out.println("Deploying resources...");
+			this.deployResources(appDir, bundle, ham);
 			// Update runtime scripts.
 			System.out.println("Updating scripts...");
 			final String homeDir = UEnvironment.instance.getInstalledHomeDir();
@@ -206,7 +206,7 @@ public class DeployCommand implements ICommand {
 	}
 
 	/**
-	 * Deploy all the modules contained in the given
+	 * Deploy all the resources contained in the given
 	 * bundle file.
 	 * @param appDir The <code>String</code> path of
 	 * the application directory.
@@ -215,30 +215,30 @@ public class DeployCommand implements ICommand {
 	 * @throws IOException If parsing bundle file
 	 * failed.
 	 */
-	private void deployModules(final String appDir, final JarFile bundle, final HAM ham) throws IOException {
+	private void deployResources(final String appDir, final JarFile bundle, final HAM ham) throws IOException {
 		final String tempDir = UEnvironment.instance.getInstalledTempDir();
 		final int size = ham.resources.size();
 		for (int i = 0; i < size; i++) {
-			final HAMResource module = ham.resources.get(i);
+			final HAMResource resource = ham.resources.get(i);
 			// Use class name as the Jar file entry name.
-			final String entryName = module.classname + ".jar";
-			final File moduleFile = FileUtils.instance.writeToFile(bundle, entryName, tempDir);
-			// Write all the contents of the module Jar file to the module directory.
-			final String moduleDir = appDir + module.classname + File.separator;
-			FileUtils.instance.writeAll(moduleFile, moduleDir);
+			final String entryName = resource.classname + ".jar";
+			final File resourceFile = FileUtils.instance.writeToFile(bundle, entryName, tempDir);
+			// Write all the contents of the resource Jar file to the resource directory.
+			final String resourceDir = appDir + resource.classname + File.separator;
+			FileUtils.instance.writeAll(resourceFile, resourceDir);
 			// Retrieve the resources Jar file.
-			final File resourcesFile = new File(moduleDir+module.classname+"-resources.jar");
+			final File resourcesFile = new File(resourceDir+resource.classname+"-resources.jar");
 			if (resourcesFile.exists()) {
 				// Create resources directory.
-				final File resourcesDir = new File(moduleDir+"resources/");
+				final File resourcesDir = new File(resourceDir+"resources/");
 				resourcesDir.mkdir();
 				// Write all the contents of resources Jar file to resources directory.
 				FileUtils.instance.writeAll(resourcesFile, resourcesDir.getAbsolutePath());
 				// Remove resources Jar file.
 				resourcesFile.delete();
 			}
-			// Delete the temporary module Jar file.
-			moduleFile.delete();
+			// Delete the temporary resource Jar file.
+			resourceFile.delete();
 		}
 	}
 
