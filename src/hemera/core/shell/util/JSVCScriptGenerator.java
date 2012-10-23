@@ -82,7 +82,7 @@ public enum JSVCScriptGenerator {
 		final String footer = this.buildFooter(homeDir, config);
 		// Build script.
 		final StringBuilder builder = new StringBuilder();
-		builder.append(header).append(" -stop -wait 10 -cp ").append(classpath).append(" ");
+		builder.append(header).append(" -stop -wait 20 -cp ").append(classpath).append(" ");
 		builder.append(footer);
 		return builder.toString();
 	}
@@ -109,7 +109,7 @@ public enum JSVCScriptGenerator {
 		final String footer = this.buildFooter(homeDir, config);
 		// Build script.
 		final StringBuilder builder = new StringBuilder();
-		builder.append(header).append(" -wait 10 -cp ").append(classpath).append(" ");
+		builder.append(header).append(" -wait 20 -cp ").append(classpath).append(" ");
 		builder.append(footer);
 		return builder.toString();
 	}
