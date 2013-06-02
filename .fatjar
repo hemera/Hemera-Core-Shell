@@ -1,10 +1,10 @@
 #Fat Jar Configuration File
-#Tue Apr 30 11:05:17 EDT 2013
+#Sun Jun 02 00:18:43 EDT 2013
 onejar.license.required=true
 manifest.classpath=
 manifest.removesigners=true
 onejar.checkbox=false
-jarname=hemera-core-shell-v1.0.3.jar
+jarname=hemera-core-shell-v1.0.4.jar
 manifest.mergeall=true
 manifest.mainclass=hemera.core.shell.Main
 manifest.file=<createnew>
