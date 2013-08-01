@@ -13,7 +13,7 @@ import hemera.core.utility.shell.ShellResult;
  * any arguments.
  *
  * @author Yi Wang (Neakor)
- * @version 1.0.0
+ * @version 1.0.6
  */
 public class StopCommand implements ICommand {
 
@@ -27,7 +27,7 @@ public class StopCommand implements ICommand {
 		} else {
 			// Execute the script as root.
 			final String binDir = UEnvironment.instance.getInstalledBinDir();
-			final ShellResult result = Shell.instance.executeAsRoot(binDir+EShell.JSVCStopScriptFile.value);
+			final ShellResult result = Shell.instance.execute(new String[] {binDir, EShell.JSVCStopScriptFile.value}, true);
 			if (result.code != 0) {
 				if (result.code == 255) {
 					System.err.println("Stopping Hemera runtime environment failed. This is probably due to an application resource shutdown failure.");

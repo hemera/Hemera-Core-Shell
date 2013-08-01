@@ -17,7 +17,7 @@ import hemera.core.utility.shell.ShellResult;
  * arguments.
  *
  * @author Yi Wang (Neakor)
- * @version 1.0.0
+ * @version 1.0.6
  */
 public class UninstallCommand implements ICommand {
 
@@ -62,9 +62,7 @@ public class UninstallCommand implements ICommand {
 		final String tempFile = currentDir + "temp.env";
 		final File temp = FileUtils.instance.writeAsString(updatedContents.toString(), tempFile);
 		// Execute command to update environment profile.
-		final StringBuilder command = new StringBuilder();
-		command.append("mv ").append(temp.getAbsolutePath()).append(" ").append(file.getAbsolutePath());
-		final ShellResult result = Shell.instance.executeAsRoot(command.toString());
+		final ShellResult result = Shell.instance.execute(new String[] {"mv", temp.getAbsolutePath(), file.getAbsolutePath()}, true);
 		if (result.code != 0) throw new IOException("Removing Hemera environment path failed.\n" + result.output);
 	}
 

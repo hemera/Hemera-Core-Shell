@@ -26,7 +26,7 @@ import hemera.core.utility.shell.ShellResult;
  * to install the environment to.
  *
  * @author Yi Wang (Neakor)
- * @version 1.0.0
+ * @version 1.0.6
  */
 public class InstallCommand implements ICommand {
 
@@ -152,8 +152,7 @@ public class InstallCommand implements ICommand {
 		final String updatedScript = scriptContents.replace(jar.getName(), newJarPath);
 		FileUtils.instance.writeAsString(updatedScript, newScriptPath);
 		// Make script executable.
-		final ShellResult scriptResult = Shell.instance.execute("chmod +x " + newScriptPath);
-		if (scriptResult.code != 0) throw new IOException("Making hemera script executable failed.\n" + scriptResult.output);
+		Shell.instance.makeExecutable(newScriptPath);
 		// Make JSVC executable.
 		String jsvcFile = null;
 		if (UEnvironment.instance.isOSX()) {
@@ -161,8 +160,7 @@ public class InstallCommand implements ICommand {
 		} else if (UEnvironment.instance.isLinux()) {
 			jsvcFile = binDir + EShell.JSVCLinux.value;
 		}
-		final ShellResult jsvcResult = Shell.instance.execute("chmod +x " + jsvcFile);
-		if (jsvcResult.code != 0) throw new IOException("Making JSVC script executable failed.\n" + jsvcResult.output);
+		Shell.instance.makeExecutable(jsvcFile);
 	}
 
 	/**
@@ -199,9 +197,7 @@ public class InstallCommand implements ICommand {
 		final String tempFile = currentDir + "temp.env";
 		final File temp = FileUtils.instance.writeAsString(updatedContents.toString(), tempFile);
 		// Execute command to update environment profile.
-		final StringBuilder command = new StringBuilder();
-		command.append("mv ").append(temp.getAbsolutePath()).append(" ").append(file.getAbsolutePath());
-		final ShellResult result = Shell.instance.executeAsRoot(command.toString());
+		final ShellResult result = Shell.instance.execute(new String[] {"mv", temp.getAbsolutePath(), file.getAbsolutePath()}, true);
 		if (result.code != 0) throw new IOException("Overwriting existing environment file failed.\n" + result.output);
 	}
 
