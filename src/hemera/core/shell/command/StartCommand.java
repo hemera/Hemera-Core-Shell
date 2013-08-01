@@ -27,7 +27,7 @@ public class StartCommand implements ICommand {
 			// Execute the script as root.
 			System.out.println("Starting Hemera runtime environment...");
 			final String binDir = UEnvironment.instance.getInstalledBinDir();
-			final ShellResult result = Shell.instance.execute(new String[] {binDir, EShell.JSVCStartScriptFile.value}, true);
+			final ShellResult result = Shell.instance.execute(new String[] {binDir+EShell.JSVCStartScriptFile.value}, true);
 			if (result.code != 0) {
 				System.err.println("Executing JSVC script failed: " + result.code);
 				System.err.println(result.output);

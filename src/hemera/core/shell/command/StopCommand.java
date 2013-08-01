@@ -27,7 +27,7 @@ public class StopCommand implements ICommand {
 		} else {
 			// Execute the script as root.
 			final String binDir = UEnvironment.instance.getInstalledBinDir();
-			final ShellResult result = Shell.instance.execute(new String[] {binDir, EShell.JSVCStopScriptFile.value}, true);
+			final ShellResult result = Shell.instance.execute(new String[] {binDir+EShell.JSVCStopScriptFile.value}, true);
 			if (result.code != 0) {
 				if (result.code == 255) {
 					System.err.println("Stopping Hemera runtime environment failed. This is probably due to an application resource shutdown failure.");
